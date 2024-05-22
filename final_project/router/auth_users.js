@@ -53,19 +53,23 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   const newReview = { "username": username, "review": text, "date": new Date() }
 
   let book = books[req.params.isbn]
-  if (book.reviews && book.reviews[0]) {
-    for (let i = 0; i < book.reviews.length; i++) {
-      if (book.reviews[i].username === username) {
-        book.reviews[i] = newReview
+  if (book.reviews){
+    let reviews = book.reviews
+    let i = 0
+    let review = reviews[i]
+    while (review != undefined){
+      if (review.username === username){
+        reviews[i] = newReview
         return res.status(200).json({message: "Review successfully updated"});
       }
+      i++
+      review = reviews[i]
     }
   }
-  else {
-    books[req.params.isbn].reviews[0] = newReview
-  }
 
+  books[req.params.isbn].reviews[0] = newReview
   return res.status(200).json({message: "Review successfully added"});
+
 });
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
