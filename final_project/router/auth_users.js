@@ -35,8 +35,8 @@ regd_users.post("/login", (req,res) => {
   const password = req.body.password
   if (username && password) {
     if (authenticatedUser(username,password)) {
-      let token = jwt.sign({data: password}, 'fingerprint', { expiresIn: 60 * 60 });
-      req.session.authorization = { token, username}
+      let token = jwt.sign({data: password}, 'fingerprint_customer', { expiresIn: 60 * 60 });
+      req.session.user = { token, username}
       return res.status(200).send("User successfully logged in");
     }
   }
@@ -45,9 +45,45 @@ regd_users.post("/login", (req,res) => {
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+ 
+  const isbn = req.params.isbn
+  const text = req.body.review
+
+  username = req.session.user.username
+  const newReview = { "username": username, "review": text, "date": new Date() }
+
+  const book = books[req.params.isbn]
+  if (book) {
+    const reviews = books[req.params.isbn].reviews
+
+    //TO FIX
+    if (reviews != undefined) {
+
+      const oldReview = reviews.filter((r) => r.username === username)
+      if (oldReview.length > 0) {
+        reviews[reviews.indexOf(oldReview[0])] = newReview
+      }
+    }
+    else{
+      reviews.push(newReview)
+    }
+    
+  }
+  else {
+    return res.status(404).json({message: "Book not found"});
+  }
+  
+  return res.status(200).json({message: "Review successfully added"});
 });
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+  //Write your code here
+  const book = books[req.params.isbn]
+  username = req.session.authorization.username
+  book.reviews.filter((r) => r.username === username).remove()
+  return res.status(200).json({message: "Review successfully deleted"});
+});
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
