@@ -52,38 +52,44 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   username = req.session.user.username
   const newReview = { "username": username, "review": text, "date": new Date() }
 
-  const book = books[req.params.isbn]
-  if (book) {
-    const reviews = books[req.params.isbn].reviews
-
-    //TO FIX
-    if (reviews != undefined) {
-
-      const oldReview = reviews.filter((r) => r.username === username)
-      if (oldReview.length > 0) {
-        reviews[reviews.indexOf(oldReview[0])] = newReview
+  let book = books[req.params.isbn]
+  if (book.reviews && book.reviews[0]) {
+    for (let i = 0; i < book.reviews.length; i++) {
+      if (book.reviews[i].username === username) {
+        book.reviews[i] = newReview
+        return res.status(200).json({message: "Review successfully updated"});
       }
     }
-    else{
-      reviews.push(newReview)
-    }
-    
   }
   else {
-    return res.status(404).json({message: "Book not found"});
+    books[req.params.isbn].reviews[0] = newReview
   }
-  
+
   return res.status(200).json({message: "Review successfully added"});
 });
 
 regd_users.delete("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  const book = books[req.params.isbn]
-  username = req.session.authorization.username
-  book.reviews.filter((r) => r.username === username).remove()
-  return res.status(200).json({message: "Review successfully deleted"});
-});
 
+  const isbn = req.params.isbn
+  username = req.session.user.username
+
+  let book = books[req.params.isbn]
+  if (book.reviews){
+    let reviews = book.reviews
+
+    let i = 0
+    let review = reviews[i]
+    while (review != undefined){
+      if (review.username === username){
+        reviews[i] = undefined
+        return res.status(200).json({message: "Review successfully deleted"});
+      }
+      i++
+      review = reviews[i]
+    }
+  }
+  return res.status(404).json({message: "Review not found"});
+});
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
