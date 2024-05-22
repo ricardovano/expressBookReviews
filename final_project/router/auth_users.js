@@ -3,26 +3,44 @@ const jwt = require('jsonwebtoken');
 let books = require("./booksdb.js");
 const regd_users = express.Router();
 
-let users = [];
+let users = [
+  {"username":"ricardo","password":"123temp"},
+];
 
 const isValid = (username)=>{
-  if (users[username] === undefined){
-    return true
+  let userswithsamename = users.filter((user)=>{
+    return user.username === username
+  });
+  if(userswithsamename.length > 0){
+    return true;
+  } else {
+    return false;
   }
-  return false
 }
 
 const authenticatedUser = (username,password)=>{ 
-  if (users[username] != undefined && users[username] === password){
-    return false
-  } 
-  return true
+  let validusers = users.filter((user)=>{
+    return (user.username === username && user.password === password)
+  });
+  if(validusers.length > 0){
+    return true;
+  } else {
+    return false;
+  }
 }
 
 //only registered users can login
 regd_users.post("/login", (req,res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const username = req.body.username
+  const password = req.body.password
+  if (username && password) {
+    if (authenticatedUser(username,password)) {
+      let token = jwt.sign({data: password}, 'fingerprint', { expiresIn: 60 * 60 });
+      req.session.authorization = { token, username}
+      return res.status(200).send("User successfully logged in");
+    }
+  }
+  return res.status(208).json({message: "Invalid Login. Check username and password"});
 });
 
 // Add a book review
