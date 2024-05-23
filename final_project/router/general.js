@@ -1,3 +1,4 @@
+const axios = require('axios');
 const express = require('express');
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
@@ -16,6 +17,22 @@ public_users.post("/register", (req,res) => {
     }
   }
   return res.status(404).json({message: "Unable to register user."});
+});
+
+public_users.get('/asynbooks/',function (req, res) {
+
+  async function getBooks() {
+    try {
+      const response = await axios.get("http://localhost:5001/");
+      return res.json(response.data);
+    } catch (error) {
+      console.error('Error fetching books:', error);
+      res.status(500).json({ message: 'Failed to retrieve books' });
+    }
+  }
+
+  getBooks();
+
 });
 
 // Get the book list available in the shop
